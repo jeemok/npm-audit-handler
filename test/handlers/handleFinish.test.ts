@@ -19,7 +19,7 @@ describe('Events handling', () => {
     expect(processStub.called).to.equal(false);
     expect(consoleStub.called).to.equal(false);
 
-    handleFinish(jsonBuffer, auditLevel, exceptionIds, exceptionModules, columnsToInclude);
+    handleFinish(jsonBuffer, auditLevel, exceptionIds, exceptionModules, columnsToInclude, false, []);
 
     expect(processStub.called).to.equal(true);
     expect(processStub.calledWith(1)).to.equal(true);
@@ -41,7 +41,7 @@ describe('Events handling', () => {
     const columnsToInclude: string[] = [];
 
     expect(consoleStub.called).to.equal(false);
-    handleFinish(jsonBuffer, auditLevel, exceptionIds, exceptionModules, columnsToInclude);
+    handleFinish(jsonBuffer, auditLevel, exceptionIds, exceptionModules, columnsToInclude, false, []);
 
     expect(processStub.called).to.equal(true);
     expect(processStub.calledWith(0)).to.equal(true);
@@ -63,7 +63,7 @@ describe('Events handling', () => {
     const columnsToInclude: string[] = [];
 
     expect(consoleStub.called).to.equal(false);
-    handleFinish(jsonBuffer, auditLevel, exceptionIds, exceptionModules, columnsToInclude);
+    handleFinish(jsonBuffer, auditLevel, exceptionIds, exceptionModules, columnsToInclude, false, []);
 
     expect(processStub.called).to.equal(true);
     expect(processStub.calledWith(0)).to.equal(true);
@@ -89,7 +89,7 @@ describe('Events handling', () => {
     expect(consoleErrorStub.called).to.equal(false);
     expect(consoleInfoStub.called).to.equal(false);
 
-    handleFinish(jsonBuffer, auditLevel, exceptionIds, exceptionModules, columnsToInclude);
+    handleFinish(jsonBuffer, auditLevel, exceptionIds, exceptionModules, columnsToInclude, false, []);
 
     expect(processStub.called).to.equal(true);
     expect(consoleErrorStub.called).to.equal(true);
@@ -119,7 +119,7 @@ describe('Events handling', () => {
     expect(consoleWarnStub.called).to.equal(false);
     expect(consoleInfoStub.called).to.equal(false);
 
-    handleFinish(jsonBuffer, auditLevel, exceptionIds, exceptionModules, columnsToInclude);
+    handleFinish(jsonBuffer, auditLevel, exceptionIds, exceptionModules, columnsToInclude, false, []);
 
     expect(processStub.called).to.equal(true);
     expect(processStub.calledWith(1)).to.equal(true);
@@ -141,7 +141,7 @@ describe('Events handling', () => {
     // Message for multiple unused exceptions
     exceptionIds = ['975', '976', '985', '1084', '1179', '1213', '1500', '1523', '1555', '2001', '2002'];
     exceptionModules = ['fakeModule1'];
-    handleFinish(jsonBuffer, auditLevel, exceptionIds, exceptionModules, columnsToInclude);
+    handleFinish(jsonBuffer, auditLevel, exceptionIds, exceptionModules, columnsToInclude, false, []);
     message = [
       '2 of the excluded vulnerabilities did not match any of the found vulnerabilities: 2001, 2002.',
       'They can be removed from the .nsprc file or --exclude -x flags.',
@@ -155,4 +155,6 @@ describe('Events handling', () => {
     consoleWarnStub.restore();
     consoleInfoStub.restore();
   });
+
+  // todo add json output tests
 });

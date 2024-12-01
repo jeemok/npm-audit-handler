@@ -46,10 +46,11 @@ const COLORS = <const>{
  * @param  {String} message     Message
  * @param  {String} fgColor     Foreground color
  * @param  {String} bgColor     Background color
+ * @param  {Boolean} condition  Condition to color the message, when false it will return the message without color
  * @return {String}             Message
  */
-export function color(message: string, fgColor?: Color, bgColor?: Color): string {
-  if ('NO_COLOR' in process.env) {
+export function color(message: string, fgColor?: Color, bgColor?: Color, condition = true): string {
+  if ('NO_COLOR' in process.env || !condition) {
     return message;
   }
 

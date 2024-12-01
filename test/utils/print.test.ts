@@ -16,6 +16,8 @@ describe('Print utils', () => {
   it('exception table visual', () => {
     printExceptionReport(EXCEPTION_TABLE_DATA);
   });
+
+  // todo add json output tests
 });
 
 export {};

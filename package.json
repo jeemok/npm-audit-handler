@@ -17,7 +17,7 @@
   },
   "scripts": {
     "preaudit": "npm run build",
-    "audit": "node lib audit -x 1064843,1067245",
+    "audit": "node lib audit -j -x 1064843,1067245",
     "test": "mocha -r ts-node/register test/**/*.test.ts",
     "lint": "eslint .",
     "qc": "npm run test && npm run lint",

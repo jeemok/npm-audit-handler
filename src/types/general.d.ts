@@ -1,4 +1,5 @@
 import { AuditLevel, Severity } from './level';
+import type { ExceptionReportKey, SecurityReportKey } from './table';
 
 export interface CommandOptions {
   readonly exclude?: string;
@@ -7,6 +8,7 @@ export interface CommandOptions {
   readonly level?: AuditLevel;
   readonly registry?: string;
   readonly includeColumns?: string;
+  readonly json?: boolean;
 }
 
 export interface NpmAuditJson {
@@ -61,6 +63,19 @@ export interface ProcessedResult {
   readonly failed?: boolean;
   unusedExceptionIds: string[];
   unusedExceptionModules: string[];
+}
+
+export interface JsonOutput {
+  /** Whether there was a failure and the output is not accurate */
+  readonly failed: boolean;
+  /** List of all found vulnerabilities */
+  readonly vulnerabilitiesReport: Record<SecurityReportKey, string>[];
+  /** List of unhandled vulnerabilities, ie those that cause the audit to fail */
+  readonly unhandledVulnerabilityIds: string[];
+  /** List of all exceptions */
+  readonly exceptionsReport: Record<ExceptionReportKey, string>[];
+  /** List of unused exceptions */
+  readonly unusedExceptionIds: string[];
 }
 
 export interface ProcessedReport {
