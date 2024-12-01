@@ -6,6 +6,7 @@ import { exec } from 'child_process';
 import { AuditLevel, CommandOptions } from 'src/types';
 
 import handleInput from './src/handlers/handleInput';
+import type { HandleInputCallback } from './src/handlers/handleInput';
 import handleFinish from './src/handlers/handleFinish';
 
 import packageJson from './package.json';
@@ -20,14 +21,18 @@ const program = new Command();
  * @param  {Array}  exceptionIds    List of vulnerability IDs to exclude
  * @param  {Array} modulesToIgnore  List of vulnerable modules to ignore in audit results
  * @param  {Array} columnsToInclude List of columns to include in audit results
+ * @param  {Boolean} outputJson     Output audit report in JSON format
+ * @param  {Array} exceptionsReport Exceptions report
  */
-export function callback(
+export const callback: HandleInputCallback = (
   auditCommand: string,
   auditLevel: AuditLevel,
   exceptionIds: string[],
   modulesToIgnore: string[],
   columnsToInclude: string[],
-): void {
+  outputJson: boolean,
+  exceptionsReport: string[][],
+): void => {
   // Increase the default max buffer size (1 MB)
   const audit = exec(`${auditCommand} --json`, { maxBuffer: MAX_BUFFER_SIZE });
 
@@ -40,11 +45,13 @@ export function callback(
 
   // Once the stdout has completed, process the output
   if (audit.stderr) {
-    audit.stderr.on('close', () => handleFinish(jsonBuffer, auditLevel, exceptionIds, modulesToIgnore, columnsToInclude));
+    audit.stderr.on('close', () =>
+      handleFinish(jsonBuffer, auditLevel, exceptionIds, modulesToIgnore, columnsToInclude, outputJson, exceptionsReport),
+    );
     // stderr
     audit.stderr.on('data', console.error);
   }
-}
+};
 
 program.name(packageJson.name).version(packageJson.version);
 
@@ -57,6 +64,7 @@ program
   .option('-p, --production', 'Skip checking the devDependencies.')
   .option('-r, --registry <url>', 'The npm registry url to use.')
   .option('-i, --include-columns <columnName1>,<columnName2>,..,<columnNameN>', 'Columns to include in report.')
+  .option('-j, --json', 'Output audit report in JSON format')
   .action((options: CommandOptions) => handleInput(options, callback));
 
 program.parse(process.argv);

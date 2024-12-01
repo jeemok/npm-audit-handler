@@ -1,15 +1,26 @@
 import get from 'lodash.get';
 import semver from 'semver';
 import { AuditLevel, CommandOptions } from 'src/types';
+import type { ProcessedReport } from 'src/types';
 import { getNpmVersion } from '../utils/npm';
 import { readFile } from '../utils/file';
-import { getExceptionsIds } from '../utils/vulnerability';
+import { getProcessedExceptions } from '../utils/vulnerability';
+
+export type HandleInputCallback = (
+  auditCommand: string,
+  auditLevel: AuditLevel,
+  exceptionIds: string[],
+  modulesToIgnore: string[],
+  columnsToInclude: string[],
+  outputJson: boolean,
+  exceptionsReport: string[][],
+) => void;
 
 /**
  * Get the `npm audit` flag to audit only production dependencies.
  * @return {String} The flag.
  */
-function getProductionOnlyOption() {
+function getProductionOnlyOption(): string {
   const npmVersion = getNpmVersion();
   if (semver.satisfies(npmVersion, '<=8.13.2')) {
     return '--production';
@@ -22,10 +33,7 @@ function getProductionOnlyOption() {
  * @param  {Object} options     User's command options or flags
  * @param  {Function} fn        The function to handle the inputs
  */
-export default function handleInput(
-  options: CommandOptions,
-  fn: (T1: string, T2: AuditLevel, T3: string[], T4: string[], T5: string[]) => void,
-): void {
+export default function handleInput(options: CommandOptions, fn: HandleInputCallback): void {
   // Generate NPM Audit command
   const auditCommand: string = [
     'npm audit',
@@ -46,12 +54,13 @@ export default function handleInput(
     .split(',')
     .map((each) => each.trim())
     .filter((each) => each !== '');
-  const exceptionIds: string[] = getExceptionsIds(nsprc, cmdExceptions);
+  const outputJson: boolean = get(options, 'json', false);
+  const { exceptionIds, report: exceptionsReport }: ProcessedReport = getProcessedExceptions(nsprc, cmdExceptions, outputJson);
   const cmdModuleIgnore: string[] = get(options, 'moduleIgnore', '').split(',');
   const cmdIncludeColumns: string[] = get(options, 'includeColumns', '')
     .split(',')
     .map((each: string) => each.trim())
     .filter((each: string) => !!each);
 
-  fn(auditCommand, auditLevel, exceptionIds, cmdModuleIgnore, cmdIncludeColumns);
+  fn(auditCommand, auditLevel, exceptionIds, cmdModuleIgnore, cmdIncludeColumns, outputJson, exceptionsReport);
 }

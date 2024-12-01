@@ -1,5 +1,5 @@
 import { AuditLevel } from 'src/types';
-import { printSecurityReport } from '../utils/print';
+import { printJsonOutput, printSecurityReport } from '../utils/print';
 import { processAuditJson, handleUnusedExceptions } from '../utils/vulnerability';
 
 /**
@@ -9,6 +9,8 @@ import { processAuditJson, handleUnusedExceptions } from '../utils/vulnerability
  * @param  {Array} exceptionIds       List of vulnerability IDs to exclude
  * @param  {Array} exceptionModules   List of vulnerable modules to ignore in audit results
  * @param  {Array} columnsToInclude   List of columns to include in audit results
+ * @param  {Boolean} outputJson       Output audit report in JSON format
+ * @param  {Array} exceptionsReport   List of exceptions
  */
 export default function handleFinish(
   jsonBuffer: string,
@@ -16,14 +18,11 @@ export default function handleFinish(
   exceptionIds: string[],
   exceptionModules: string[],
   columnsToInclude: string[],
+  outputJson: boolean,
+  exceptionsReport: string[][],
 ): void {
-  const { unhandledIds, report, failed, unusedExceptionIds, unusedExceptionModules } = processAuditJson(
-    jsonBuffer,
-    auditLevel,
-    exceptionIds,
-    exceptionModules,
-    columnsToInclude,
-  );
+  const result = processAuditJson(jsonBuffer, auditLevel, exceptionIds, exceptionModules, columnsToInclude, outputJson);
+  const { unhandledIds, report, failed, unusedExceptionIds, unusedExceptionModules } = result;
 
   // If unable to process the audit JSON
   if (failed) {
@@ -34,21 +33,31 @@ export default function handleFinish(
   }
 
   // Print the security report
-  if (report.length) {
-    printSecurityReport(report, columnsToInclude);
-  }
+  if (outputJson) {
+    printJsonOutput(result, exceptionsReport);
+  } else {
+    if (report.length) {
+      printSecurityReport(report, columnsToInclude);
+    }
 
-  // Handle unused exceptions
-  handleUnusedExceptions(unusedExceptionIds, unusedExceptionModules);
+    // Handle unused exceptions
+    handleUnusedExceptions(unusedExceptionIds, unusedExceptionModules);
+  }
 
   // Display the found unhandled vulnerabilities
   if (unhandledIds.length) {
-    console.error(`${unhandledIds.length} vulnerabilities found. Node security advisories: ${unhandledIds.join(', ')}`);
+    if (!outputJson) {
+      console.error(`${unhandledIds.length} vulnerabilities found. Node security advisories: ${unhandledIds.join(', ')}`);
+    }
+
     // Exit failed
     process.exit(1);
   } else {
     // Happy happy, joy joy
-    console.info('🤝  All good!');
+    if (!outputJson) {
+      console.info('🤝  All good!');
+    }
+
     process.exit(0);
   }
 }

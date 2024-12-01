@@ -1,9 +1,39 @@
+/* eslint-disable quote-props */
 import get from 'lodash.get';
 import { table, TableUserConfig } from 'table';
-import { SecurityReportHeader, ExceptionReportHeader } from 'src/types';
+import type {
+  SecurityReportHeader,
+  ExceptionReportHeader,
+  ProcessedResult,
+  JsonOutput,
+  SecurityReportKey,
+  ExceptionReportKey,
+} from 'src/types';
 
 const SECURITY_REPORT_HEADER: SecurityReportHeader[] = ['ID', 'Module', 'Title', 'Paths', 'Severity', 'URL', 'Ex.'];
 const EXCEPTION_REPORT_HEADER: ExceptionReportHeader[] = ['ID', 'Status', 'Expiry', 'Notes'];
+
+const SECURITY_REPORT_HEADER_TO_OBJECT_KEY_MAP: Record<SecurityReportHeader, SecurityReportKey> = {
+  ID: 'id',
+  Module: 'module',
+  Title: 'title',
+  Paths: 'paths',
+  Severity: 'severity',
+  URL: 'url',
+  'Ex.': 'isExcepted',
+};
+
+const EXCEPTION_REPORT_HEADER_TO_OBJECT_KEY_MAP: Record<ExceptionReportHeader, ExceptionReportKey> = {
+  ID: 'id',
+  Status: 'status',
+  Expiry: 'expiry',
+  Notes: 'notes',
+};
+
+const SECURITY_REPORT_KEYS: SecurityReportKey[] = SECURITY_REPORT_HEADER.map((header) => SECURITY_REPORT_HEADER_TO_OBJECT_KEY_MAP[header]);
+const EXCEPTION_REPORT_KEYS: ExceptionReportKey[] = EXCEPTION_REPORT_HEADER.map(
+  (header) => EXCEPTION_REPORT_HEADER_TO_OBJECT_KEY_MAP[header],
+);
 
 // TODO: Add unit tests
 /**
@@ -66,10 +96,10 @@ export function printSecurityReport(data: string[][], columnsToInclude: string[]
 
 /**
  * Print the exception report in a table format
- * @param  {Array} data   Array of arrays
- * @return {undefined}    Returns void
+ * @param  {Array} exceptionsReport   Array of arrays
+ * @return {undefined}                Returns void
  */
-export function printExceptionReport(data: string[][]): void {
+export function printExceptionReport(exceptionsReport: string[][]): void {
   const configs: TableUserConfig = {
     singleLine: true,
     header: {
@@ -78,5 +108,39 @@ export function printExceptionReport(data: string[][]): void {
     },
   };
 
-  console.info(table([EXCEPTION_REPORT_HEADER, ...data], configs));
+  console.info(table([EXCEPTION_REPORT_HEADER, ...exceptionsReport], configs));
+}
+
+/**
+ * Print the JSON output
+ * @param  {Object} result           The processed result
+ * @param  {Array} exceptionsReport  The exceptions report
+ * @return {undefined}               Returns void
+ */
+export function printJsonOutput(result: ProcessedResult, exceptionsReport: string[][]): void {
+  const jsonOutput: JsonOutput = {
+    failed: result.failed ?? false,
+    unhandledVulnerabilityIds: result.unhandledIds.filter(Boolean),
+    vulnerabilitiesReport: convertReportTuplesToObjects(result.report, SECURITY_REPORT_KEYS),
+    exceptionsReport: convertReportTuplesToObjects(exceptionsReport, EXCEPTION_REPORT_KEYS),
+    unusedExceptionIds: result.unusedExceptionIds.filter(Boolean),
+  };
+
+  console.info(JSON.stringify(jsonOutput, null, 2));
+}
+
+/**
+ * Convert a given report tuple to an object with the given headers
+ * @param {Array} report  Report where each row is a tuple
+ * @param {Array} elementKeyNames Array of object key names to use for each tuple element
+ * @return {Array}        Report where each row is an object
+ */
+function convertReportTuplesToObjects<THeader extends string>(report: string[][], elementKeyNames: THeader[]): Record<THeader, string>[] {
+  return report.map((rowTuple) =>
+    rowTuple.reduce((rowObj, colValue, i) => {
+      const header = elementKeyNames[i];
+      rowObj[header] = colValue;
+      return rowObj;
+    }, {} as Record<string, string>),
+  );
 }
