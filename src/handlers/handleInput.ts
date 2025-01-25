@@ -1,4 +1,3 @@
-import get from 'lodash.get';
 import semver from 'semver';
 import { AuditLevel, CommandOptions } from 'src/types';
 import { getNpmVersion } from '../utils/npm';
@@ -30,25 +29,25 @@ export default function handleInput(
   const auditCommand: string = [
     'npm audit',
     // flags
-    get(options, 'production') ? getProductionOnlyOption() : '',
-    get(options, 'registry') ? `--registry=${options.registry}` : '',
+    options.production ? getProductionOnlyOption() : '',
+    options.registry ? `--registry=${options.registry}` : '',
   ]
     .filter(Boolean)
     .join(' ');
 
   // Taking the audit level from the command or environment variable
   const envVar = process.env.NPM_CONFIG_AUDIT_LEVEL as AuditLevel;
-  const auditLevel: AuditLevel = get(options, 'level', envVar) || 'info';
+  const auditLevel: AuditLevel = options.level || envVar || 'info';
 
   // Get the exceptions
   const nsprc = readFile('.nsprc');
-  const cmdExceptions: string[] = get(options, 'exclude', '')
+  const cmdExceptions: string[] = (options.exclude || '')
     .split(',')
     .map((each) => each.trim())
     .filter((each) => each !== '');
   const exceptionIds: string[] = getExceptionsIds(nsprc, cmdExceptions);
-  const cmdModuleIgnore: string[] = get(options, 'moduleIgnore', '').split(',');
-  const cmdIncludeColumns: string[] = get(options, 'includeColumns', '')
+  const cmdModuleIgnore: string[] = (options.moduleIgnore || '').split(',');
+  const cmdIncludeColumns: string[] = (options.includeColumns || '')
     .split(',')
     .map((each: string) => each.trim())
     .filter((each: string) => !!each);

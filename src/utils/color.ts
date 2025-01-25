@@ -1,4 +1,3 @@
-import get from 'lodash.get';
 import { Severity, Color, ColorCode } from 'src/types';
 
 const RESET = '\x1b[0m' as const;
@@ -54,8 +53,8 @@ export function color(message: string, fgColor?: Color, bgColor?: Color): string
   }
 
   return [
-    <ColorCode>get(COLORS, `${fgColor}.fg`, ''),
-    <ColorCode>get(COLORS, `${bgColor}.bg`, ''),
+    <ColorCode>(fgColor ? COLORS[fgColor].fg : ''),
+    <ColorCode>(bgColor ? COLORS[bgColor].bg : ''),
     message,
     <ColorCode>RESET, // Reset the color at the end
   ].join('');

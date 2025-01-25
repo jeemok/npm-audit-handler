@@ -1,4 +1,3 @@
-import get from 'lodash.get';
 import { table, TableUserConfig } from 'table';
 import { SecurityReportHeader, ExceptionReportHeader } from 'src/types';
 
@@ -18,7 +17,7 @@ export function getColumnWidth(tableData: string[][], columnIndex: number, maxWi
   // Find the maximum length in the column
   const contentLength = tableData.reduce(
     (max, cur) => {
-      let content = JSON.stringify(get(cur, columnIndex, ''));
+      let content = JSON.stringify(cur[columnIndex] || '');
       // Remove the color codes
       content = content.replace(/\\x1b\[\d{1,2}m/g, '');
       content = content.replace(/\\u001b\[\d{1,2}m/g, '');
